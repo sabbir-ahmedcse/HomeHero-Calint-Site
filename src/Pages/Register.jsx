@@ -6,6 +6,7 @@ import { AuthContext } from "../Context/AuthContext";
 import useAxiosSecure from "../Hooks/useAxiosSecure";
 import useAxios from "../Hooks/useAxios";
 
+
 const Register = () => {
   const { createUser, signInWithGoogle } = useContext(AuthContext);
   // const axiosSecure = useAxiosSecure();
@@ -39,50 +40,55 @@ const Register = () => {
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    const { name, email, photo, password } = formData;
+ const handleRegister = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    if (password.length < 6) {
-      setLoading(false);
-      return toast.error("Password must be at least 6 characters!");
-    }
-    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
-      setLoading(false);
-      return toast.error("Password must contain both uppercase and lowercase letters!");
-    }
+  const { name, email, photo, password } = formData;
 
-    try {
-      // Create user in Firebase
-      const userCredential = await createUser(email, password, name, photo);
-      const user = userCredential.user;
-      
-      // Prepare user data for MongoDB
-      const userData = {
-        name: name,
-        email: email,
-        photo: photo || "",
-        role: "user", // default role
-        createdAt: new Date(),
-        uid: user.uid, // Firebase UID
-        emailVerified: user.emailVerified,
-        lastLoginAt: new Date()
-      };
+  if (password.length < 6) {
+    setLoading(false);
+    return toast.error("Password must be at least 6 characters!");
+  }
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+    setLoading(false);
+    return toast.error("Password must contain both uppercase and lowercase letters!");
+  }
 
-      // Save user to MongoDB
-      await saveUserToDB(userData);
-      
-      toast.success("🎉 Registration Successful! Welcome aboard!");
+  try {
+    //  Create user in Firebase
+    const userCredential = await createUser(email, password, name, photo);
+    const user = userCredential.user;
+
+    //  Prepare user data for MongoDB
+    const userData = {
+      name,
+      email,
+      photo: photo || "",
+      role: "user",
+      createdAt: new Date(),
+      uid: user.uid,
+      emailVerified: user.emailVerified,
+      lastLoginAt: new Date(),
+    };
+
+    //  Save user to MongoDB
+    await saveUserToDB(userData);
+
+    toast.success("🎉 Registration Successful! Redirecting...");
+
+    // Wait 1.5 seconds then redirect
+    setTimeout(() => {
       navigate("/");
-    } catch (err) {
-      console.error("Registration error:", err);
-      toast.error(err.message || "Registration failed!");
-    } finally {
-      setLoading(false);
-    }
-  };
+    }, 1000);
+  } catch (err) {
+    console.error("Registration error:", err);
+    toast.error(err.message || "Registration failed!");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
