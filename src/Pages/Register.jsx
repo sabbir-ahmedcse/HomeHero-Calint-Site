@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import { AuthContext } from "../Context/AuthContext";
 import useAxiosSecure from "../Hooks/useAxiosSecure";
 import useAxios from "../Hooks/useAxios";
+import Swal from "sweetalert2";
 
 
 const Register = () => {
@@ -40,7 +41,7 @@ const Register = () => {
     }
   };
 
- const handleRegister = async (e) => {
+const handleRegister = async (e) => {
   e.preventDefault();
   setLoading(true);
 
@@ -75,12 +76,19 @@ const Register = () => {
     //  Save user to MongoDB
     await saveUserToDB(userData);
 
-    toast.success("🎉 Registration Successful! Redirecting...");
+    // SweetAlert success popup
+    await Swal.fire({
+      icon: "success",
+      title: "Registration Successful!",
+      text: "🎉 Welcome aboard! Redirecting to home...",
+      showConfirmButton: false,
+      timer: 1500,
+      timerProgressBar: true,
+    });
 
-    // Wait 1.5 seconds then redirect
-    setTimeout(() => {
-      navigate("/");
-    }, 1000);
+    // Redirect to home page
+    navigate("/");
+
   } catch (err) {
     console.error("Registration error:", err);
     toast.error(err.message || "Registration failed!");
@@ -88,7 +96,6 @@ const Register = () => {
     setLoading(false);
   }
 };
-
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
