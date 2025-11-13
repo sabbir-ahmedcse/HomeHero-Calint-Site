@@ -17,7 +17,6 @@ const Footer = () => {
           </p>
         </div>
 
-        {/* --- Column 2: Quick Links --- */}
         <div>
           <h3 className="text-lg font-semibold mb-3">Quick Links</h3>
           <ul className="space-y-2 text-gray-100">
@@ -70,19 +69,22 @@ const Footer = () => {
           <h3 className="text-lg font-semibold mb-3">Follow Us</h3>
           <div className="flex gap-4">
             <a
-              href="#"
+              href="https://www.facebook.com/MdSabbirRumon2"
+                target="_blank"
               className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
             >
               <Facebook size={20} />
             </a>
             <a
-              href="#"
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
+              href="https://www.instagram.com/sa_bb_ir_ah_me_d/?hl=en"
+            target="_blank"
+              className="p-2  rounded-full bg-white/10 hover:bg-white/20 transition"
             >
               <Instagram size={20} />
             </a>
             <a
-              href="#"
+              href="https://www.linkedin.com/in/sabbir-ahmedcse/"
+                target="_blank"
               className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
             >
               <Linkedin size={20} />
