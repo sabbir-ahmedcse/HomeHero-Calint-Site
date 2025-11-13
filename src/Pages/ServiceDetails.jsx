@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
 import {
   Star,
   Clock,
@@ -18,17 +17,21 @@ import {
 import Swal from "sweetalert2";
 import Loader from "../Components/Loader";
 import { AuthContext } from "../Context/AuthContext";
+import useAxios from "../Hooks/useAxios";
 
 const ServiceDetails = () => {
   const { id } = useParams();
-  const { user } = useContext(AuthContext); // 🔹 Firebase বা Context Auth থেকে ইউজার
+  const { user } = useContext(AuthContext);
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [bookingData, setBookingData] = useState({
     email: "",
     date: "",
+    price: "" // price field যোগ করা হয়েছে
   });
+
+  const axiosInstance = useAxios(); // useAxios hook ব্যবহার
 
   useEffect(() => {
     if (user?.email) {
@@ -39,10 +42,15 @@ const ServiceDetails = () => {
   useEffect(() => {
     const fetchService = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/services/${id}`);
+        const res = await axiosInstance.get(`/services/${id}`);
         setService(res.data.data);
+        // service লোড হলে price সেট করুন
+        if (res.data.data) {
+          setBookingData(prev => ({ ...prev, price: res.data.data.price }));
+        }
       } catch (err) {
         console.error("Failed to fetch service:", err);
+        Swal.fire("Error", "Service not found", "error");
       } finally {
         setLoading(false);
       }
@@ -56,12 +64,12 @@ const ServiceDetails = () => {
       const payload = {
         userEmail: bookingData.email,
         serviceId: service._id,
-        serviceName: service.title,
+        serviceName: service.title || service.name, // title না থাকলে name ব্যবহার করুন
         bookingDate: bookingData.date,
-        price: service.price,
+        price: bookingData.price || service.price, // editable price ব্যবহার
       };
 
-      const res = await axios.post("http://localhost:5000/bookings", payload);
+      const res = await axiosInstance.post("/bookings", payload);
 
       if (res.status === 200 || res.status === 201) {
         Swal.fire({
@@ -72,7 +80,11 @@ const ServiceDetails = () => {
           showConfirmButton: false,
         });
         setShowModal(false);
-        setBookingData({ email: user?.email || "", date: "" });
+        setBookingData({ 
+          email: user?.email || "", 
+          date: "", 
+          price: service.price // reset to original price
+        });
       } else {
         throw new Error("Unexpected response");
       }
@@ -81,7 +93,7 @@ const ServiceDetails = () => {
       Swal.fire({
         icon: "error",
         title: "Booking Failed",
-        text: "Something went wrong. Please try again.",
+        text: error.response?.data?.message || "Something went wrong. Please try again.",
       });
     }
   };
@@ -142,7 +154,7 @@ const ServiceDetails = () => {
                   service.image ||
                   "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=80"
                 }
-                alt={service.title}
+                alt={service.title || service.name}
                 className="w-full h-96 object-cover"
               />
               <div className="absolute top-4 left-4">
@@ -154,7 +166,7 @@ const ServiceDetails = () => {
 
             <div className="bg-white rounded-3xl p-8 shadow-xl">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                {service.title}
+                {service.title || service.name}
               </h1>
               <div className="flex items-center gap-4 mb-6">
                 <div className="flex items-center gap-2">
@@ -221,7 +233,6 @@ const ServiceDetails = () => {
       </div>
 
       {/* Booking Modal */}
-      {/* Booking Modal */}
       <AnimatePresence>
         {showModal && (
           <motion.div
@@ -240,7 +251,7 @@ const ServiceDetails = () => {
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Book {service.title}
+                  Book {service.title || service.name}
                 </h3>
                 <button
                   onClick={() => setShowModal(false)}
@@ -252,8 +263,8 @@ const ServiceDetails = () => {
 
               {/* Service Info */}
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6">
-                <p className="font-semibold text-gray-900">{service.title}</p>
-                <p className="text-gray-600 text-sm"> ${service.price}</p>
+                <p className="font-semibold text-gray-900">{service.title || service.name}</p>
+                <p className="text-gray-600 text-sm">${service.price}</p>
               </div>
 
               <form onSubmit={handleBookingSubmit} className="space-y-4">
@@ -299,7 +310,7 @@ const ServiceDetails = () => {
                     type="number"
                     min="0"
                     name="price"
-                    value={bookingData.price ?? service.price}
+                    value={bookingData.price}
                     onChange={(e) =>
                       setBookingData({ ...bookingData, price: e.target.value })
                     }
@@ -328,7 +339,6 @@ const ServiceDetails = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   );
 };

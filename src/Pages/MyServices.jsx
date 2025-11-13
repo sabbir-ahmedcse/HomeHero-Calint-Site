@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../Context/AuthContext";
 import Swal from "sweetalert2";
+import useAxios from "../Hooks/useAxios";
 
 const MyServices = () => {
   const { user } = useContext(AuthContext);
@@ -14,6 +15,8 @@ const MyServices = () => {
     image: "",
   });
   const [loading, setLoading] = useState(true);
+  
+  const axiosInstance = useAxios(); // useAxios hook ব্যবহার
 
   // 🔹 Load logged-in user's services
   const loadServices = async () => {
@@ -23,16 +26,15 @@ const MyServices = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/services`);
-      const data = await res.json();
-      if (data.success) {
+      const res = await axiosInstance.get("/services");
+      if (res.data.success) {
         // Filter only the services of logged-in provider
-        const myServices = data.data.filter(
+        const myServices = res.data.data.filter(
           (s) => s.provider_email === user.email
         );
         setServices(myServices);
       } else {
-        Swal.fire("Error", data.message, "error");
+        Swal.fire("Error", res.data.message, "error");
       }
     } catch (err) {
       Swal.fire("Error", err.message, "error");
@@ -59,16 +61,13 @@ const MyServices = () => {
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/services/${id}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-
-      if (data.success) {
+      const res = await axiosInstance.delete(`/services/${id}`);
+      
+      if (res.data.success) {
         Swal.fire("Deleted!", "Service removed successfully", "success");
         await loadServices();
       } else {
-        throw new Error(data.message);
+        throw new Error(res.data.message);
       }
     } catch (err) {
       Swal.fire("Error", err.message, "error");
@@ -91,24 +90,17 @@ const MyServices = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(
-        `http://localhost:5000/services/${editingService._id}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
+      const res = await axiosInstance.patch(
+        `/services/${editingService._id}`,
+        formData
       );
-      const data = await res.json();
 
-      if (data.success) {
+      if (res.data.success) {
         Swal.fire("Updated!", "Service updated successfully", "success");
         setEditingService(null);
         await loadServices();
       } else {
-        throw new Error(data.message);
+        throw new Error(res.data.message);
       }
     } catch (err) {
       Swal.fire("Error", err.message, "error");
@@ -166,7 +158,7 @@ const MyServices = () => {
         {!loading && services.length === 0 && (
           <div className="text-center py-12">
             <p className="text-xl text-purple-200 mb-4">
-              You haven’t added any services yet.
+              You haven't added any services yet.
             </p>
             <button
               onClick={() => (window.location.href = "/add-service")}

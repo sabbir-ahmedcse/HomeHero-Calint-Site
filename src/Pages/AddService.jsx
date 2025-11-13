@@ -1,11 +1,13 @@
 import React, { useContext, useState } from "react";
 import Swal from "sweetalert2";
 import { AuthContext } from "../Context/AuthContext";
+import useAxios from "../Hooks/useAxios";
 // import { useNavigate } from "react-router";
 
 const AddService = () => {
   const { user } = useContext(AuthContext);
   // const navigate = useNavigate();
+  const useAxiosInstance  =useAxios()
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -27,69 +29,65 @@ const AddService = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!user) {
-      Swal.fire("Error", "Please login first", "error");
-      navigate("/login");
-      return;
-    }
+  if (!user) {
+    Swal.fire("Error", "Please login first", "error");
+    // navigate("/login"); // Uncomment if you’re using navigate
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const serviceData = {
-        name: formData.name.trim(),
-        category: formData.category,
-        price: parseFloat(formData.price),
-        description: formData.description.trim(),
-        image: formData.image.trim(),
-        provider_name: formData.provider_name.trim(),
-        provider_email: formData.provider_email.trim(),
-        featured: formData.featured,
-      };
+  try {
+    const serviceData = {
+      name: formData.name.trim(),
+      category: formData.category,
+      price: parseFloat(formData.price),
+      description: formData.description.trim(),
+      image: formData.image.trim(),
+      provider_name: formData.provider_name.trim(),
+      provider_email: formData.provider_email.trim(),
+      featured: formData.featured,
+    };
 
-      const response = await fetch("http://localhost:5000/services", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(serviceData),
+    // ✅ Using your Axios instance here instead of fetch
+    const response = await useAxiosInstance.post("/services", serviceData);
+
+    if (response.data.success) {
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: "Service added successfully!",
+        timer: 2000,
+        showConfirmButton: false,
       });
 
-      const result = await response.json();
+      // Reset form
+      setFormData({
+        name: "",
+        category: "",
+        price: "",
+        description: "",
+        image: "",
+        provider_name: user?.displayName || "",
+        provider_email: user?.email || "",
+        featured: false,
+      });
 
-      if (result.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Success!",
-          text: "Service added successfully!",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-
-        // Reset form
-        setFormData({
-          name: "",
-          category: "",
-          price: "",
-          description: "",
-          image: "",
-          provider_name: user?.displayName || "",
-          provider_email: user?.email || "",
-          featured: false,
-        });
-
-        // setTimeout(() => navigate("/my-services"), 2200);
-      } else {
-        throw new Error(result.message || "Failed to add service");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      Swal.fire("Error", "Failed to add service. Try again.", "error");
-    } finally {
-      setLoading(false);
+      // setTimeout(() => navigate("/my-services"), 2200);
+    } else {
+      throw new Error(response.data.message || "Failed to add service");
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+    Swal.fire("Error", "Failed to add service. Try again.", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (!user) {
     return (

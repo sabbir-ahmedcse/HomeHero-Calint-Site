@@ -4,45 +4,40 @@ import { Star, Clock, MapPin, Eye } from "lucide-react";
 import { NavLink } from "react-router";
 import ErrorPage from "./ErrorPage";
 import Loader from "../Components/Loader";
+import useAxios from "../Hooks/useAxios";
 
 const Services = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const useAxiosInstance = useAxios(); 
+
   useEffect(() => {
-  const fetchServices = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/services");
-      if (!res.ok) throw new Error("Failed to fetch services");
-      const data = await res.json();
+    const fetchServices = async () => {
+      try {
+        //  Use your
+        const res = await useAxiosInstance.get("/services");
 
-      // handle different response structures safely
-      const servicesArray = Array.isArray(data)
-        ? data
-        : data.services || data.data || [];
+        
+        const data = res.data;
+        const servicesArray = Array.isArray(data)
+          ? data
+          : data.services || data.data || [];
 
-      setServices(servicesArray);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setServices(servicesArray);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchServices();
-}, []);
+    fetchServices();
+  }, [useAxiosInstance]);
 
-
-  if (loading)
-    return (
-     <Loader></Loader>
-    );
-
-  if (error)
-    return (
-      <ErrorPage></ErrorPage>
-    );
+  if (loading) return <Loader />;
+  if (error) return <ErrorPage />;
 
   return (
     <section className="py-12 px-6 bg-gray-50 min-h-screen">
@@ -71,7 +66,7 @@ const Services = () => {
               }}
               className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-100"
             >
-              {/* Image Section */}
+              {/* Image */}
               <div className="relative overflow-hidden">
                 <img
                   src={
@@ -81,18 +76,12 @@ const Services = () => {
                   alt={service.title}
                   className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-
-                {/* Overlay */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300" />
-
-                {/* Category Badge */}
                 <div className="absolute top-4 left-4">
                   <span className="bg-purple-600/90 text-white px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
                     {service.category || "Service"}
                   </span>
                 </div>
-
-                {/* Rating */}
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-500 fill-current" />
                   <span className="text-sm font-bold text-gray-800">
@@ -106,13 +95,11 @@ const Services = () => {
                 <h2 className="text-xl font-bold text-gray-800 mb-3 line-clamp-2 group-hover:text-purple-600 transition-colors">
                   {service.title}
                 </h2>
-
                 <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
                   {service.description ||
                     "Professional service with quality guarantee and customer satisfaction."}
                 </p>
 
-                {/* Meta Info */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
@@ -126,7 +113,6 @@ const Services = () => {
                   </div>
                 </div>
 
-                {/* Price + Button */}
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-2xl font-bold text-purple-600">
@@ -134,7 +120,6 @@ const Services = () => {
                     </span>
                     <span className="text-gray-500 text-sm ml-1">/service</span>
                   </div>
-
                   <NavLink
                     to={`/service/${service._id}`}
                     className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-5 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/25"

@@ -2,9 +2,11 @@ import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../Context/AuthContext';
 import { Mail, LogOut, Edit3, X } from 'lucide-react';
 import Swal from 'sweetalert2';
+import useAxios from '../Hooks/useAxios';
 
 const Profile = () => {
   const { user, logout } = useContext(AuthContext);
+  const useAxiosInstance = useAxios()
 
   // Local states
   const [currentTime, setCurrentTime] = useState('');
@@ -47,52 +49,49 @@ const Profile = () => {
     );
   }
 
-  // ✅ Handle Update Submit
+  //  Handle Update Submit
   const handleUpdate = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const updatedUser = {
-      name: updatedName,
-      email: user.email,
-      photoURL: updatedPhoto,
-      lastLogin: new Date().toISOString()
-    };
-
-    try {
-      const res = await fetch('http://localhost:5000/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedUser)
-      });
-
-      if (!res.ok) throw new Error('Failed to update user');
-
-      // ✅ Instantly update UI
-      setLocalUser({
-        ...localUser,
-        displayName: updatedName,
-        photoURL: updatedPhoto
-      });
-
-      setIsEditing(false);
-
-      // ✅ SweetAlert Success
-      Swal.fire({
-        icon: 'success',
-        title: 'Profile Updated!',
-        text: 'Your profile has been successfully updated.',
-        confirmButtonColor: '#9333ea'
-      });
-    } catch (error) {
-      console.error(error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Update Failed',
-        text: 'Something went wrong. Please try again later.',
-        confirmButtonColor: '#ef4444'
-      });
-    }
+  const updatedUser = {
+    name: updatedName,
+    email: user.email,
+    photoURL: updatedPhoto,
+    lastLogin: new Date().toISOString()
   };
+
+  try {
+    // ✅ Use your axios instance instead of fetch
+    const res = await useAxiosInstance.post('/users', updatedUser);
+
+    if (!res.data) throw new Error('Failed to update user');
+
+    // ✅ Instantly update UI
+    setLocalUser({
+      ...localUser,
+      displayName: updatedName,
+      photoURL: updatedPhoto
+    });
+
+    setIsEditing(false);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Profile Updated!',
+      text: 'Your profile has been successfully updated.',
+      confirmButtonColor: '#9333ea'
+    });
+  } catch (error) {
+    console.error(error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Update Failed',
+      text: 'Something went wrong. Please try again later.',
+      confirmButtonColor: '#ef4444'
+    });
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center px-4 py-12">

@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { motion } from 'framer-motion';
+import useAxios from '../Hooks/useAxios';
 
 const TestimonialsSection = () => {
   const [reviews, setReviews] = useState([]);
+  const axiosInstance = useAxios(); 
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/services');
+        const res = await axiosInstance.get('/services');
         const services = res.data.data.slice(0, 6);
 
         const reviewsData = services.map((service) => ({
           id: service._id,
           providerName: service.providerName || "Anonymous",
           email: service.email || "unknown@example.com",
-          rating: Math.floor(Math.random() * 2) + 4, // random 4 or 5
+          rating: Math.floor(Math.random() * 2) + 4, 
           feedback: service.description || "Great service!",
         }));
 
@@ -38,7 +39,7 @@ const TestimonialsSection = () => {
         transition={{
           repeat: Infinity,
           repeatType: "loop",
-          duration: 60,  // ➜ Slower scroll (default 20)
+          duration: 60,  
           ease: "linear",
         }}
       >

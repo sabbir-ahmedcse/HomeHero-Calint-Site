@@ -1,27 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { motion } from 'framer-motion';
 import { NavLink } from 'react-router';
 import { ArrowRight, Star, Clock, MapPin, Eye } from 'lucide-react';
 import Loader from './Loader';
+import useAxios from '../Hooks/useAxios';
 
 const ServicesCard = () => {
     const [services, setServices] = useState([]);
-    const [loader, setLoader] = useState(true)
+    const [loader, setLoader] = useState(true);
+    const axiosInstance = useAxios(); 
 
     useEffect(() => {
         const fetchServices = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/home-services');
+                const res = await axiosInstance.get('/home-services');
                 setServices(res.data.data.slice(0, 6));
+                setLoader(false);
             } catch (err) {
                 console.error("Failed to fetch services:", err);
+                setLoader(false);
             }
         };
         fetchServices();
-    }, []);
-    
-   
+    }, [axiosInstance]);
+
+    if (loader) return <Loader />; 
 
     return (
         <section className="max-w-7xl mx-auto px-4 py-16 bg-gradient-to-b from-purple-100 my-10 to-pink-50 rounded-xl">
@@ -45,45 +48,36 @@ const ServicesCard = () => {
                 {services.map((service, index) => (
                     <motion.div
                         key={service._id}
-                        whileHover={{
-                            scale: 1.03,
-                            y: -5
-                        }}
+                        whileHover={{ scale: 1.03, y: -5 }}
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            duration: 0.5,
-                            delay: index * 0.1,
-                            type: "spring",
-                            stiffness: 100
-                        }}
+                        transition={{ duration: 0.5, delay: index * 0.1, type: "spring", stiffness: 100 }}
                         className="bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-100"
                     >
-                        {/* Image Container */}
+                       
                         <div className="relative overflow-hidden">
                             <img
                                 src={service.image || 'https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
                                 alt={service.title}
                                 className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                             />
-                            {/* Overlay */}
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300" />
 
-                            {/* Category Badge */}
+                           
                             <div className="absolute top-4 left-4">
                                 <span className="bg-purple-600/90 text-white px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
                                     {service.category || 'Service'}
                                 </span>
                             </div>
 
-                            {/* Rating Badge */}
+                         
                             <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">
                                 <Star className="w-4 h-4 text-yellow-500 fill-current" />
                                 <span className="text-sm font-bold text-gray-800">{service.rating || '4.5'}</span>
                             </div>
                         </div>
 
-                        {/* Content */}
+                        
                         <div className="p-6">
                             <h2 className="text-xl font-bold text-gray-800 mb-3 line-clamp-2 group-hover:text-purple-600 transition-colors">
                                 {service.title}
@@ -93,7 +87,7 @@ const ServicesCard = () => {
                                 {service.description || 'Professional service with quality guarantee and customer satisfaction.'}
                             </p>
 
-                            {/* Service Meta */}
+                           
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-4 text-sm text-gray-500">
                                     <div className="flex items-center gap-1">
@@ -107,7 +101,7 @@ const ServicesCard = () => {
                                 </div>
                             </div>
 
-                            {/* Price and Button */}
+                          
                             <div className="flex items-center justify-between">
                                 <div>
                                     <span className="text-2xl font-bold text-purple-600">${service.price || 0}</span>

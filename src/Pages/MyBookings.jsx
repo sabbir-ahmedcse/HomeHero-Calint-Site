@@ -1,32 +1,29 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../Context/AuthContext";
 import Swal from "sweetalert2";
+import useAxios from "../Hooks/useAxios";
 
 const MyBookings = () => {
   const { user, token } = useContext(AuthContext);
+  const useAxiosInstance = useAxios(); 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
 
-  // Fetch user's bookings
+  // ✅ Fetch user's bookings
   useEffect(() => {
     if (!user?.email) return;
 
     const fetchMyBookings = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:5000/bookings?email=${user.email}`);
-        
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        
-        const data = await res.json();
-        
-        if (data.success) {
-          setBookings(data.data || []);
+        // Use axios instance instead of fetch
+        const res = await useAxiosInstance.get(`/bookings?email=${user.email}`);
+
+        if (res.data.success) {
+          setBookings(res.data.data || []);
         } else {
-          Swal.fire("Error", data.message || "Failed to fetch bookings", "error");
+          Swal.fire("Error", res.data.message || "Failed to fetch bookings", "error");
         }
       } catch (err) {
         console.error("Fetch bookings error:", err);
@@ -55,25 +52,14 @@ const MyBookings = () => {
     if (confirm.isConfirmed) {
       setCancellingId(bookingId);
       try {
-        const res = await fetch(`http://localhost:5000/bookings/${bookingId}`, {
-          method: "DELETE",
-          headers: { 
-            'Content-Type': 'application/json'
-          }
-        });
+        //  Use axiosInstance instead of fetch
+        const res = await useAxiosInstance.delete(`/bookings/${bookingId}`);
 
-        const result = await res.json();
-
-        if (!res.ok) {
-          throw new Error(result.message || "Cancel failed");
-        }
-
-        if (result.success) {
-          // Remove cancelled booking from state
+        if (res.data.success) {
           setBookings(prev => prev.filter(booking => booking._id !== bookingId));
           Swal.fire("Cancelled!", "Your booking has been cancelled.", "success");
         } else {
-          throw new Error(result.message);
+          throw new Error(res.data.message);
         }
       } catch (err) {
         console.error("Cancel booking error:", err);
@@ -84,7 +70,7 @@ const MyBookings = () => {
     }
   };
 
-  // Format date function
+  // Format date
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -95,7 +81,7 @@ const MyBookings = () => {
     });
   };
 
-  // Get status badge color
+  // Status color
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'confirmed':
@@ -257,36 +243,6 @@ const MyBookings = () => {
                   ))}
                 </tbody>
               </table>
-            </div>
-          )}
-
-          {/* Stats */}
-          {bookings.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-white/20">
-              <div className="flex flex-wrap justify-center gap-6 text-purple-200">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{bookings.length}</div>
-                  <div>Total Bookings</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-300">
-                    {bookings.filter(b => b.status === 'confirmed').length}
-                  </div>
-                  <div>Confirmed</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-300">
-                    {bookings.filter(b => b.status === 'pending').length}
-                  </div>
-                  <div>Pending</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-300">
-                    {bookings.filter(b => b.status === 'cancelled').length}
-                  </div>
-                  <div>Cancelled</div>
-                </div>
-              </div>
             </div>
           )}
         </div>
